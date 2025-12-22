@@ -16,8 +16,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
 import { toast } from 'vue-sonner'
-import { Settings, Bot, Loader2, Brain, Plus, X, Clock } from 'lucide-vue-next'
+import { Settings, Bot, Loader2, Brain, Plus, X, Clock, ArrowLeft } from 'lucide-vue-next'
 import { chatbotService } from '@/services/api'
 
 interface MessageButton {
@@ -238,10 +246,25 @@ async function saveAISettings() {
     <!-- Header -->
     <header class="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div class="flex h-16 items-center px-6">
+        <RouterLink to="/chatbot">
+          <Button variant="ghost" size="icon" class="mr-3">
+            <ArrowLeft class="h-5 w-5" />
+          </Button>
+        </RouterLink>
         <Settings class="h-5 w-5 mr-3" />
-        <div>
+        <div class="flex-1">
           <h1 class="text-xl font-semibold">Chatbot Settings</h1>
-          <p class="text-sm text-muted-foreground">Configure chatbot behavior and AI responses</p>
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/chatbot">Chatbot</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Settings</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
         </div>
       </div>
     </header>

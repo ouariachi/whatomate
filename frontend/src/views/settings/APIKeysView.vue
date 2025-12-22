@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Card,
   CardContent,
@@ -161,81 +162,87 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-6 space-y-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold">API Keys</h1>
-        <p class="text-muted-foreground">
-          Manage API keys for programmatic access
-        </p>
+  <div class="flex flex-col h-full">
+    <!-- Header -->
+    <header class="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div class="flex h-16 items-center px-6">
+        <Key class="h-5 w-5 mr-3" />
+        <div class="flex-1">
+          <h1 class="text-xl font-semibold">API Keys</h1>
+          <p class="text-sm text-muted-foreground">Manage API keys for programmatic access</p>
+        </div>
+        <Button @click="isCreateDialogOpen = true">
+          <Plus class="h-4 w-4 mr-2" />
+          Create API Key
+        </Button>
       </div>
-      <Button @click="isCreateDialogOpen = true">
-        <Plus class="h-4 w-4 mr-2" />
-        Create API Key
-      </Button>
-    </div>
+    </header>
 
-    <Card>
-      <CardHeader>
-        <CardTitle>Your API Keys</CardTitle>
-        <CardDescription>
-          API keys allow external applications to access your account. Keep them secure.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Key</TableHead>
-              <TableHead>Last Used</TableHead>
-              <TableHead>Expires</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead class="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow v-if="isLoading">
-              <TableCell colspan="6" class="text-center py-8 text-muted-foreground">
-                Loading...
-              </TableCell>
-            </TableRow>
-            <TableRow v-else-if="apiKeys.length === 0">
-              <TableCell colspan="6" class="text-center py-8 text-muted-foreground">
-                <Key class="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p>No API keys yet</p>
-              </TableCell>
-            </TableRow>
-            <TableRow v-for="key in apiKeys" :key="key.id">
-              <TableCell class="font-medium">{{ key.name }}</TableCell>
-              <TableCell>
-                <code class="bg-muted px-2 py-1 rounded text-sm">
-                  whm_{{ key.key_prefix }}...
-                </code>
-              </TableCell>
-              <TableCell>{{ formatDate(key.last_used_at) }}</TableCell>
-              <TableCell>{{ formatDate(key.expires_at) }}</TableCell>
-              <TableCell>
-                <Badge
-                  :variant="isExpired(key.expires_at) ? 'destructive' : key.is_active ? 'default' : 'secondary'"
-                >
-                  {{ isExpired(key.expires_at) ? 'Expired' : key.is_active ? 'Active' : 'Inactive' }}
-                </Badge>
-              </TableCell>
-              <TableCell class="text-right">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  @click="keyToDelete = key; isDeleteDialogOpen = true"
-                >
-                  <Trash2 class="h-4 w-4 text-destructive" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+    <ScrollArea class="flex-1">
+      <div class="p-6 space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Your API Keys</CardTitle>
+            <CardDescription>
+              API keys allow external applications to access your account. Keep them secure.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Key</TableHead>
+                  <TableHead>Last Used</TableHead>
+                  <TableHead>Expires</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead class="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow v-if="isLoading">
+                  <TableCell colspan="6" class="text-center py-8 text-muted-foreground">
+                    Loading...
+                  </TableCell>
+                </TableRow>
+                <TableRow v-else-if="apiKeys.length === 0">
+                  <TableCell colspan="6" class="text-center py-8 text-muted-foreground">
+                    <Key class="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p>No API keys yet</p>
+                  </TableCell>
+                </TableRow>
+                <TableRow v-for="key in apiKeys" :key="key.id">
+                  <TableCell class="font-medium">{{ key.name }}</TableCell>
+                  <TableCell>
+                    <code class="bg-muted px-2 py-1 rounded text-sm">
+                      whm_{{ key.key_prefix }}...
+                    </code>
+                  </TableCell>
+                  <TableCell>{{ formatDate(key.last_used_at) }}</TableCell>
+                  <TableCell>{{ formatDate(key.expires_at) }}</TableCell>
+                  <TableCell>
+                    <Badge
+                      :variant="isExpired(key.expires_at) ? 'destructive' : key.is_active ? 'default' : 'secondary'"
+                    >
+                      {{ isExpired(key.expires_at) ? 'Expired' : key.is_active ? 'Active' : 'Inactive' }}
+                    </Badge>
+                  </TableCell>
+                  <TableCell class="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      @click="keyToDelete = key; isDeleteDialogOpen = true"
+                    >
+                      <Trash2 class="h-4 w-4 text-destructive" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </ScrollArea>
 
     <!-- Create API Key Dialog -->
     <Dialog v-model:open="isCreateDialogOpen">

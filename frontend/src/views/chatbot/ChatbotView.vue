@@ -104,8 +104,9 @@ const statCards = [
   <div class="flex flex-col h-full">
     <!-- Header -->
     <header class="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div class="flex h-16 items-center justify-between px-6">
-        <div>
+      <div class="flex h-16 items-center px-6">
+        <Bot class="h-5 w-5 mr-3" />
+        <div class="flex-1">
           <h1 class="text-xl font-semibold">Chatbot</h1>
           <p class="text-sm text-muted-foreground">Manage automated responses and AI conversations</p>
         </div>

@@ -264,23 +264,26 @@ const webhookUrl = window.location.origin + '/api/webhook'
   <div class="flex flex-col h-full">
     <!-- Header -->
     <header class="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div class="flex h-16 items-center justify-between px-6">
-        <div class="flex items-center gap-4">
-          <div>
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/settings">Settings</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Accounts</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-            <h1 class="text-xl font-semibold mt-1">WhatsApp Accounts</h1>
-            <p class="text-sm text-muted-foreground">Manage your WhatsApp Business API connections</p>
-          </div>
+      <div class="flex h-16 items-center px-6">
+        <RouterLink to="/settings">
+          <Button variant="ghost" size="icon" class="mr-3">
+            <ArrowLeft class="h-5 w-5" />
+          </Button>
+        </RouterLink>
+        <Phone class="h-5 w-5 mr-3" />
+        <div class="flex-1">
+          <h1 class="text-xl font-semibold">WhatsApp Accounts</h1>
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/settings">Settings</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Accounts</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
         </div>
         <Button @click="openCreateDialog">
           <Plus class="h-4 w-4 mr-2" />

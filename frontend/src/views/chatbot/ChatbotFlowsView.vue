@@ -40,6 +40,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
 import { chatbotService, flowsService } from '@/services/api'
 import { toast } from 'vue-sonner'
 import { Plus, Pencil, Trash2, Workflow, ArrowLeft, Play, Pause, GripVertical, ChevronDown, ChevronUp } from 'lucide-vue-next'
@@ -456,17 +464,26 @@ function removeButton(step: FlowStep, index: number) {
   <div class="flex flex-col h-full">
     <!-- Header -->
     <header class="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div class="flex h-16 items-center justify-between px-6">
-        <div class="flex items-center gap-4">
-          <RouterLink to="/chatbot">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft class="h-5 w-5" />
-            </Button>
-          </RouterLink>
-          <div>
-            <h1 class="text-xl font-semibold">Conversation Flows</h1>
-            <p class="text-sm text-muted-foreground">Design multi-step conversation experiences</p>
-          </div>
+      <div class="flex h-16 items-center px-6">
+        <RouterLink to="/chatbot">
+          <Button variant="ghost" size="icon" class="mr-3">
+            <ArrowLeft class="h-5 w-5" />
+          </Button>
+        </RouterLink>
+        <Workflow class="h-5 w-5 mr-3" />
+        <div class="flex-1">
+          <h1 class="text-xl font-semibold">Conversation Flows</h1>
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/chatbot">Chatbot</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Flows</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
         </div>
         <Dialog v-model:open="isDialogOpen">
           <DialogTrigger as-child>

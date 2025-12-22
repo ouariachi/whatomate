@@ -86,7 +86,7 @@ async function saveNotificationSettings() {
     <header class="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div class="flex h-16 items-center px-6">
         <Settings class="h-5 w-5 mr-3" />
-        <div>
+        <div class="flex-1">
           <h1 class="text-xl font-semibold">Settings</h1>
           <p class="text-sm text-muted-foreground">Manage your account and application settings</p>
         </div>
