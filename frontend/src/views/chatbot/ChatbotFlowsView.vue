@@ -261,6 +261,23 @@ function addStep() {
   expandedStep.value = formData.value.steps.length - 1
 }
 
+// Completion webhook header helpers
+function addCompletionHeader() {
+  const headerNum = Object.keys(formData.value.completion_config.headers).length + 1
+  formData.value.completion_config.headers[`Header-${headerNum}`] = ''
+}
+
+function updateCompletionHeaderKey(oldKey: string, newKey: string) {
+  if (oldKey === newKey) return
+  const value = formData.value.completion_config.headers[oldKey]
+  delete formData.value.completion_config.headers[oldKey]
+  formData.value.completion_config.headers[newKey] = value
+}
+
+function removeCompletionHeader(key: string) {
+  delete formData.value.completion_config.headers[key]
+}
+
 function removeStep(index: number) {
   formData.value.steps.splice(index, 1)
   // Reorder remaining steps
@@ -527,6 +544,42 @@ function removeButton(step: FlowStep, index: number) {
                             placeholder="https://api.example.com/webhook"
                           />
                         </div>
+                      </div>
+
+                      <!-- Headers -->
+                      <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                          <Label>Headers (optional)</Label>
+                          <Button variant="outline" size="sm" @click="addCompletionHeader">
+                            <Plus class="h-3 w-3 mr-1" />
+                            Add Header
+                          </Button>
+                        </div>
+                        <div v-if="Object.keys(formData.completion_config.headers).length > 0" class="space-y-2">
+                          <div
+                            v-for="(value, key) in formData.completion_config.headers"
+                            :key="key"
+                            class="flex items-center gap-2"
+                          >
+                            <Input
+                              :model-value="key"
+                              placeholder="Header name"
+                              class="flex-1"
+                              @update:model-value="updateCompletionHeaderKey(key as string, $event)"
+                            />
+                            <Input
+                              v-model="formData.completion_config.headers[key as string]"
+                              placeholder="Header value"
+                              class="flex-1"
+                            />
+                            <Button variant="ghost" size="icon" @click="removeCompletionHeader(key as string)">
+                              <Trash2 class="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                        <p class="text-xs text-muted-foreground">
+                          Add custom headers like Authorization, API keys, etc. Use {{variable}} for dynamic values.
+                        </p>
                       </div>
 
                       <div class="space-y-2">
