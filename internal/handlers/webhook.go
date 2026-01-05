@@ -338,13 +338,29 @@ func (a *App) processStatusUpdate(phoneNumberID string, status WebhookStatus) {
 	a.DB.Model(&models.BulkMessageRecipient{}).Where("campaign_id = ? AND status = ?", campaign.ID, "delivered").Count(&deliveredCount)
 	a.DB.Model(&models.BulkMessageRecipient{}).Where("campaign_id = ? AND status = ?", campaign.ID, "read").Count(&readCount)
 
+	totalDelivered := deliveredCount + readCount // delivered includes read messages
+
 	// Update campaign with new counts
 	a.DB.Model(&campaign).Updates(map[string]interface{}{
-		"delivered_count": deliveredCount + readCount, // delivered includes read messages
+		"delivered_count": totalDelivered,
 		"read_count":      readCount,
 	})
 
-	a.Log.Info("Updated campaign stats", "campaign_id", campaign.ID, "delivered", deliveredCount+readCount, "read", readCount)
+	a.Log.Info("Updated campaign stats", "campaign_id", campaign.ID, "delivered", totalDelivered, "read", readCount)
+
+	// Broadcast stats update via WebSocket
+	if a.WSHub != nil {
+		a.WSHub.BroadcastToOrg(campaign.OrganizationID, websocket.WSMessage{
+			Type: websocket.TypeCampaignStatsUpdate,
+			Payload: map[string]interface{}{
+				"campaign_id":     campaign.ID.String(),
+				"sent_count":      campaign.SentCount,
+				"delivered_count": totalDelivered,
+				"read_count":      readCount,
+				"failed_count":    campaign.FailedCount,
+			},
+		})
+	}
 }
 
 // updateMessageStatus updates the status of a regular message in the messages table
