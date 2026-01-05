@@ -229,3 +229,47 @@ type ParsedStatus struct {
 	ErrorTitle  string
 	ErrorMsg    string
 }
+
+// CatalogInfo represents a catalog from Meta API
+type CatalogInfo struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// CatalogListResponse represents response from listing catalogs
+type CatalogListResponse struct {
+	Data []CatalogInfo `json:"data"`
+}
+
+// ProductInput represents input for creating/updating a product
+type ProductInput struct {
+	Name        string `json:"name"`
+	Price       int64  `json:"price"`    // Price in cents
+	Currency    string `json:"currency"`
+	URL         string `json:"url"`
+	ImageURL    string `json:"image_url"`
+	RetailerID  string `json:"retailer_id"` // SKU
+	Description string `json:"description"`
+}
+
+// ProductInfo represents a product from Meta API
+type ProductInfo struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Price       string `json:"price"`
+	Currency    string `json:"currency"`
+	URL         string `json:"url"`
+	ImageURL    string `json:"image_url"`
+	RetailerID  string `json:"retailer_id"`
+	Description string `json:"description"`
+}
+
+// ProductListResponse represents response from listing products
+type ProductListResponse struct {
+	Data []ProductInfo `json:"data"`
+}
+
+// ProductCreateResponse represents response from creating a product
+type ProductCreateResponse struct {
+	ID string `json:"id"`
+}

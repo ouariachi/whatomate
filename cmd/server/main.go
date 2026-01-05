@@ -478,6 +478,20 @@ func setupRoutes(g *fastglue.Fastglue, app *handlers.App, lo logf.Logger, basePa
 	g.DELETE("/api/webhooks/:id", app.DeleteWebhook)
 	g.POST("/api/webhooks/:id/test", app.TestWebhook)
 
+	// Catalogs
+	g.GET("/api/catalogs", app.ListCatalogs)
+	g.POST("/api/catalogs", app.CreateCatalog)
+	g.GET("/api/catalogs/{id}", app.GetCatalog)
+	g.DELETE("/api/catalogs/{id}", app.DeleteCatalog)
+	g.POST("/api/catalogs/sync", app.SyncCatalogs)
+
+	// Catalog Products
+	g.GET("/api/catalogs/{id}/products", app.ListCatalogProducts)
+	g.POST("/api/catalogs/{id}/products", app.CreateCatalogProduct)
+	g.GET("/api/products/{id}", app.GetCatalogProduct)
+	g.PUT("/api/products/{id}", app.UpdateCatalogProduct)
+	g.DELETE("/api/products/{id}", app.DeleteCatalogProduct)
+
 	// Serve embedded frontend (SPA)
 	if frontend.IsEmbedded() {
 		lo.Info("Serving embedded frontend", "base_path", basePath)

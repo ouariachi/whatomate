@@ -90,6 +90,10 @@ func GetMigrationModels() []MigrationModel {
 
 		// Canned responses
 		{"CannedResponse", &models.CannedResponse{}},
+
+		// Catalogs
+		{"Catalog", &models.Catalog{}},
+		{"CatalogProduct", &models.CatalogProduct{}},
 	}
 }
 
