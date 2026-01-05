@@ -523,11 +523,21 @@ func (a *App) RetryFailed(r *fastglue.Request) error {
 		return r.SendErrorEnvelope(fasthttp.StatusInternalServerError, "Failed to reset failed recipients", nil, "")
 	}
 
-	// Update campaign status and reset failed count
-	if err := a.DB.Model(&campaign).Updates(map[string]interface{}{
-		"status":       "queued",
-		"failed_count": 0,
-	}).Error; err != nil {
+	// Reset failed messages in messages table to pending
+	if err := a.DB.Model(&models.Message{}).
+		Where("metadata->>'campaign_id' = ? AND status = ?", id.String(), "failed").
+		Updates(map[string]interface{}{
+			"status":        "pending",
+			"error_message": "",
+		}).Error; err != nil {
+		a.Log.Error("Failed to reset failed messages", "error", err)
+	}
+
+	// Recalculate campaign stats from messages table
+	a.recalculateCampaignStats(id)
+
+	// Update campaign status to queued
+	if err := a.DB.Model(&campaign).Update("status", "queued").Error; err != nil {
 		a.Log.Error("Failed to update campaign status", "error", err)
 		return r.SendErrorEnvelope(fasthttp.StatusInternalServerError, "Failed to update campaign", nil, "")
 	}
@@ -806,6 +816,35 @@ func (a *App) incrementCampaignStat(campaignID string, status string) {
 		Where("id = ?", campaignUUID).
 		Update(column, gorm.Expr(column+" + 1")).Error; err != nil {
 		a.Log.Error("Failed to increment campaign stat", "error", err, "campaign_id", campaignID, "column", column)
+	}
+}
+
+// recalculateCampaignStats recalculates all campaign stats from messages table
+func (a *App) recalculateCampaignStats(campaignID uuid.UUID) {
+	var stats struct {
+		Sent      int64
+		Delivered int64
+		Read      int64
+		Failed    int64
+	}
+
+	a.DB.Model(&models.Message{}).
+		Where("metadata->>'campaign_id' = ?", campaignID.String()).
+		Select(`
+			COUNT(CASE WHEN status IN ('sent','delivered','read') THEN 1 END) as sent,
+			COUNT(CASE WHEN status IN ('delivered','read') THEN 1 END) as delivered,
+			COUNT(CASE WHEN status = 'read' THEN 1 END) as read,
+			COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed
+		`).Scan(&stats)
+
+	if err := a.DB.Model(&models.BulkMessageCampaign{}).Where("id = ?", campaignID).
+		Updates(map[string]interface{}{
+			"sent_count":      stats.Sent,
+			"delivered_count": stats.Delivered,
+			"read_count":      stats.Read,
+			"failed_count":    stats.Failed,
+		}).Error; err != nil {
+		a.Log.Error("Failed to recalculate campaign stats", "error", err, "campaign_id", campaignID)
 	}
 }
 
