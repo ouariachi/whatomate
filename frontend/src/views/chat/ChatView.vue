@@ -326,7 +326,26 @@ function getReplyPreviewContent(message: Message): string {
     const body = reply.content?.body || ''
     return body.length > 50 ? body.substring(0, 50) + '...' : body
   }
-  return `[${reply.message_type}]`
+  if (reply.message_type === 'button_reply') {
+    const body = typeof reply.content === 'string' ? reply.content : (reply.content?.body || '')
+    return body.length > 50 ? body.substring(0, 50) + '...' : body
+  }
+  if (reply.message_type === 'interactive') {
+    const body = typeof reply.content === 'string' ? reply.content : (reply.interactive_data?.body || reply.content?.body || '')
+    return body.length > 50 ? body.substring(0, 50) + '...' : body
+  }
+  if (reply.message_type === 'template') {
+    const body = reply.content?.body || ''
+    return body.length > 50 ? body.substring(0, 50) + '...' : body
+  }
+  if (reply.message_type === 'image') return '[Photo]'
+  if (reply.message_type === 'video') return '[Video]'
+  if (reply.message_type === 'audio') return '[Audio]'
+  if (reply.message_type === 'document') return '[Document]'
+  if (reply.message_type === 'location') return '[Location]'
+  if (reply.message_type === 'contacts') return '[Contact]'
+  if (reply.message_type === 'sticker') return '[Sticker]'
+  return '[Message]'
 }
 
 function scrollToMessage(messageId: string | undefined) {
