@@ -355,6 +355,7 @@ async function sendMessage() {
     )
     messageInput.value = ''
     contactsStore.clearReplyingTo()
+    resetTextareaHeight()
     await nextTick()
     scrollToBottom()
   } catch (error) {
@@ -362,6 +363,19 @@ async function sendMessage() {
   } finally {
     isSending.value = false
   }
+}
+
+function autoResizeTextarea() {
+  const textarea = messageInputRef.value?.$el as HTMLTextAreaElement | undefined
+  if (!textarea) return
+  textarea.style.height = 'auto'
+  textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px'
+}
+
+function resetTextareaHeight() {
+  const textarea = messageInputRef.value?.$el as HTMLTextAreaElement | undefined
+  if (!textarea) return
+  textarea.style.height = 'auto'
 }
 
 function getReplyPreviewContent(message: Message): string {
@@ -1502,9 +1516,10 @@ async function sendMediaMessage() {
               ref="messageInputRef"
               v-model="messageInput"
               placeholder="Type a message..."
-              class="flex-1 min-h-[36px] max-h-[100px] resize-none text-sm"
+              class="flex-1 min-h-[36px] max-h-[120px] resize-none text-sm overflow-y-auto"
               :rows="1"
               @keydown.enter.exact.prevent="sendMessage"
+              @input="autoResizeTextarea"
             />
             <Tooltip>
               <TooltipTrigger as-child>
