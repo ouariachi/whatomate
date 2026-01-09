@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import DOMPurify from 'dompurify'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -436,11 +437,14 @@ function formatVariableLabel(varNum: number): string {
   return `{{${varNum}}}`
 }
 
-// Format template preview with sample values
+// Format template preview with sample values (sanitized to prevent XSS)
 function formatPreview(text: string, samples: any[]): string {
-  let result = text
+  // Sanitize the base text first
+  let result = DOMPurify.sanitize(text, { ALLOWED_TAGS: [] })
   samples.forEach((sample, index) => {
-    result = result.replace(`{{${index + 1}}}`, `<span class="bg-green-100 dark:bg-green-900 px-1 rounded">${sample}</span>`)
+    // Sanitize each sample value to prevent XSS
+    const sanitizedSample = DOMPurify.sanitize(String(sample), { ALLOWED_TAGS: [] })
+    result = result.replace(`{{${index + 1}}}`, `<span class="bg-green-100 dark:bg-green-900 px-1 rounded">${sanitizedSample}</span>`)
   })
   // Replace remaining variables
   result = result.replace(/\{\{(\d+)\}\}/g, '<span class="bg-yellow-100 dark:bg-yellow-900 px-1 rounded">{{$1}}</span>')
