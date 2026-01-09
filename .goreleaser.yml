@@ -54,7 +54,9 @@ dockers:
     goarch: amd64
     image_templates:
       - "{{ .Env.DOCKER_ORG }}/whatomate:{{ .Version }}-amd64"
+      - "{{ .Env.DOCKER_ORG }}/whatomate:latest-amd64"
       - "ghcr.io/{{ .Env.GITHUB_ORG }}/whatomate:{{ .Version }}-amd64"
+      - "ghcr.io/{{ .Env.GITHUB_ORG }}/whatomate:latest-amd64"
     dockerfile: docker/Dockerfile.goreleaser
     build_flag_templates:
       - "--platform=linux/amd64"
@@ -68,7 +70,9 @@ dockers:
     goarch: arm64
     image_templates:
       - "{{ .Env.DOCKER_ORG }}/whatomate:{{ .Version }}-arm64"
+      - "{{ .Env.DOCKER_ORG }}/whatomate:latest-arm64"
       - "ghcr.io/{{ .Env.GITHUB_ORG }}/whatomate:{{ .Version }}-arm64"
+      - "ghcr.io/{{ .Env.GITHUB_ORG }}/whatomate:latest-arm64"
     dockerfile: docker/Dockerfile.goreleaser
     build_flag_templates:
       - "--platform=linux/arm64"
