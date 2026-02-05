@@ -660,14 +660,21 @@ func (a *App) ListChatbotFlows(r *fastglue.Request) error {
 	}
 
 	pg := parsePagination(r)
+	search := string(r.RequestCtx.QueryArgs().Peek("search"))
+
+	query := a.DB.Model(&models.ChatbotFlow{}).Where("organization_id = ?", orgID)
+
+	// Apply search filter - search by name, description, or trigger keywords
+	if search != "" {
+		searchPattern := "%" + search + "%"
+		query = query.Where("name ILIKE ? OR description ILIKE ? OR trigger_keywords::text ILIKE ?", searchPattern, searchPattern, searchPattern)
+	}
 
 	var total int64
-	a.DB.Model(&models.ChatbotFlow{}).Where("organization_id = ?", orgID).Count(&total)
+	query.Count(&total)
 
 	var flows []models.ChatbotFlow
-	if err := pg.Apply(a.DB.Where("organization_id = ?", orgID).
-		Preload("Steps").
-		Order("created_at DESC")).
+	if err := pg.Apply(query.Preload("Steps").Order("created_at DESC")).
 		Find(&flows).Error; err != nil {
 		return r.SendErrorEnvelope(fasthttp.StatusInternalServerError, "Failed to fetch flows", nil, "")
 	}
