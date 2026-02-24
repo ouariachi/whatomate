@@ -73,7 +73,7 @@ func (m *Manager) negotiateWebRTC(session *CallSession, account *models.WhatsApp
 			"payload_type", track.PayloadType(),
 		)
 
-		// Check if this is a telephone-event track (DTMF)
+		// Check if this is a dedicated telephone-event track (DTMF)
 		if track.Codec().MimeType == "audio/telephone-event" {
 			go m.handleDTMFTrack(session, track)
 			return
@@ -84,8 +84,9 @@ func (m *Manager) negotiateWebRTC(session *CallSession, account *models.WhatsApp
 		session.CallerRemoteTrack = track
 		session.mu.Unlock()
 
-		// Consume audio to keep the stream flowing; exits when bridge takes over
-		go m.consumeAudioTrack(session, track)
+		// Consume audio and detect inline DTMF (telephone-event packets
+		// arrive on the same m-line as audio with a different payload type).
+		go m.consumeAudioWithDTMF(session, track)
 	})
 
 	// Channel to signal when the WebRTC connection is established
@@ -184,6 +185,9 @@ func (m *Manager) negotiateWebRTC(session *CallSession, account *models.WhatsApp
 		return
 	}
 
+	// Brief delay to let the media path stabilize before sending audio
+	time.Sleep(500 * time.Millisecond)
+
 	// Start IVR flow if configured
 	if session.IVRFlow != nil {
 		go m.runIVRFlow(session, waAccount)
@@ -205,6 +209,11 @@ func (m *Manager) createPeerConnection() (*webrtc.PeerConnection, error) {
 
 	config := webrtc.Configuration{
 		ICEServers: iceServers,
+	}
+
+	// Force all media through TURN relay when direct UDP is not available.
+	if m.config.RelayOnly {
+		config.ICETransportPolicy = webrtc.ICETransportPolicyRelay
 	}
 
 	mediaEngine := &webrtc.MediaEngine{}
@@ -244,6 +253,15 @@ func (m *Manager) createPeerConnection() (*webrtc.PeerConnection, error) {
 	}
 	settingEngine.SetEphemeralUDPPortRange(portMin, portMax)
 
+	// On cloud/AWS, map private IP to public IP so ICE candidates
+	// advertise the reachable address instead of the internal one.
+	if m.config.PublicIP != "" {
+		settingEngine.SetICEAddressRewriteRules(webrtc.ICEAddressRewriteRule{
+			External:        []string{m.config.PublicIP},
+			AsCandidateType: webrtc.ICECandidateTypeHost,
+		})
+	}
+
 	api := webrtc.NewAPI(
 		webrtc.WithMediaEngine(mediaEngine),
 		webrtc.WithSettingEngine(settingEngine),
@@ -266,6 +284,82 @@ func (m *Manager) consumeAudioTrack(session *CallSession, track *webrtc.TrackRem
 		_, _, err := track.Read(buf)
 		if err != nil {
 			return
+		}
+	}
+}
+
+// consumeAudioWithDTMF reads RTP packets from the audio track, detecting
+// inline telephone-event (DTMF) packets that share the same m-line.
+// WhatsApp sends both Opus audio and telephone-event on a single track.
+// In pion v4, a new OnTrack may fire for telephone-event, but we also
+// handle the case where DTMF arrives on the same track.
+func (m *Manager) consumeAudioWithDTMF(session *CallSession, track *webrtc.TrackRemote) {
+	audioPT := track.PayloadType()
+	var lastDTMFEvent byte = 0xFF
+	var lastEndBit bool
+	packetCount := 0
+
+	m.log.Info("Consuming audio with inline DTMF detection",
+		"call_id", session.ID,
+		"audio_pt", audioPT,
+	)
+
+	for {
+		select {
+		case <-session.BridgeStarted:
+			return
+		default:
+		}
+
+		pkt, _, err := track.ReadRTP()
+		if err != nil {
+			m.log.Debug("Audio track read ended", "call_id", session.ID, "error", err)
+			return
+		}
+
+		packetCount++
+
+		// Log every 500th packet and any non-audio packet for debugging
+		if pkt.PayloadType != uint8(audioPT) {
+			m.log.Info("Non-audio RTP packet received",
+				"call_id", session.ID,
+				"payload_type", pkt.PayloadType,
+				"payload_len", len(pkt.Payload),
+				"audio_pt", audioPT,
+			)
+
+			// Telephone-event DTMF payload is 4 bytes
+			if len(pkt.Payload) >= 4 {
+				eventID := pkt.Payload[0]
+				endBit := (pkt.Payload[1] & 0x80) != 0
+
+				if endBit && !(lastDTMFEvent == eventID && lastEndBit) {
+					if digit, ok := dtmfDigits[eventID]; ok {
+						m.log.Info("DTMF digit detected (inline)",
+							"call_id", session.ID,
+							"digit", string(digit),
+							"event_id", eventID,
+						)
+
+						select {
+						case session.DTMFBuffer <- digit:
+						default:
+							m.log.Warn("DTMF buffer full, dropping digit",
+								"call_id", session.ID,
+								"digit", string(digit),
+							)
+						}
+					}
+				}
+
+				lastDTMFEvent = eventID
+				lastEndBit = endBit
+			}
+		} else if packetCount == 1 {
+			m.log.Debug("First audio packet received",
+				"call_id", session.ID,
+				"payload_type", pkt.PayloadType,
+			)
 		}
 	}
 }

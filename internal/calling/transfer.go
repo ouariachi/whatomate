@@ -77,6 +77,11 @@ func (m *Manager) initiateTransfer(session *CallSession, waAccount string, teamT
 	go m.waitForTransferTimeout(ctx, session, transfer.ID)
 
 	// Broadcast WebSocket event
+	var teamIDStr string
+	if teamID != nil {
+		teamIDStr = teamID.String()
+	}
+
 	m.broadcastTransferEvent(transfer.OrganizationID, websocket.TypeCallTransferWaiting, map[string]any{
 		"id":               transfer.ID.String(),
 		"call_log_id":      transfer.CallLogID.String(),
@@ -84,14 +89,14 @@ func (m *Manager) initiateTransfer(session *CallSession, waAccount string, teamT
 		"caller_phone":     transfer.CallerPhone,
 		"contact_id":       transfer.ContactID.String(),
 		"whatsapp_account": transfer.WhatsAppAccount,
-		"team_id":          teamID,
+		"team_id":          teamIDStr,
 		"transferred_at":   transfer.TransferredAt.Format(time.RFC3339),
 	})
 
 	m.log.Info("Call transfer initiated",
 		"call_id", session.ID,
 		"transfer_id", transfer.ID,
-		"team_id", teamID,
+		"team_id", teamIDStr,
 	)
 }
 

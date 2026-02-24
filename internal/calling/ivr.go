@@ -66,10 +66,11 @@ func (m *Manager) runIVRFlow(session *CallSession, waAccount *whatsapp.Account) 
 		if currentMenu.Greeting != "" && m.config.AudioDir != "" {
 			audioFile := filepath.Join(m.config.AudioDir, currentMenu.Greeting)
 			m.log.Info("Playing IVR greeting", "call_id", session.ID, "file", audioFile)
-			if err := player.PlayFile(audioFile); err != nil {
+			packets, err := player.PlayFile(audioFile)
+			if err != nil {
 				m.log.Error("Failed to play greeting audio", "error", err, "call_id", session.ID, "file", audioFile)
 			} else {
-				m.log.Info("IVR greeting playback finished", "call_id", session.ID)
+				m.log.Info("IVR greeting playback finished", "call_id", session.ID, "packets_sent", packets)
 			}
 		} else {
 			m.log.Warn("No greeting configured for IVR menu", "call_id", session.ID, "greeting", currentMenu.Greeting, "audio_dir", m.config.AudioDir)

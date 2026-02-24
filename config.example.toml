@@ -81,6 +81,8 @@ audio_dir = "./audio"         # Directory for IVR audio files
 transfer_timeout_secs = 120   # How long to wait for agent to accept transfer
 udp_port_min = 10000          # WebRTC UDP port range start
 udp_port_max = 10100          # WebRTC UDP port range end
+# public_ip = "1.2.3.4"      # Public IP for NAT mapping (required on AWS/cloud)
+# relay_only = true           # Force all media through TURN relay (no direct UDP needed)
 
 # ICE servers for WebRTC NAT traversal
 # Configure STUN, TURN, or both. Only what you configure is used.
