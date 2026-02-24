@@ -10,6 +10,7 @@ import (
 	"github.com/pion/webrtc/v4"
 	"github.com/shridarpatil/whatomate/internal/models"
 	"github.com/shridarpatil/whatomate/internal/websocket"
+	"github.com/shridarpatil/whatomate/pkg/whatsapp"
 )
 
 // initiateTransfer starts the transfer flow: puts caller on hold, notifies agents via WebSocket.
@@ -357,6 +358,23 @@ func (m *Manager) EndTransfer(transferID uuid.UUID) {
 		"hold_duration", holdDuration,
 		"talk_duration", talkDuration,
 	)
+
+	// Terminate the WhatsApp call so the caller's phone also disconnects
+	var account models.WhatsAppAccount
+	if err := m.db.Where("organization_id = ? AND name = ?", session.OrganizationID, session.AccountName).
+		First(&account).Error; err == nil {
+		waAccount := &whatsapp.Account{
+			PhoneID:     account.PhoneID,
+			BusinessID:  account.BusinessID,
+			APIVersion:  account.APIVersion,
+			AccessToken: account.AccessToken,
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := m.whatsapp.TerminateCall(ctx, waAccount, session.ID); err != nil {
+			m.log.Error("Failed to terminate WhatsApp call after transfer end", "error", err, "call_id", session.ID)
+		}
+	}
 
 	// Clean up the whole call session
 	m.cleanupSession(session.ID)
