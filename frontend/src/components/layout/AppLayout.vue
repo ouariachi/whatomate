@@ -6,7 +6,6 @@ import { useAuthStore } from '@/stores/auth'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
-  MessageSquare,
   ChevronLeft,
   ChevronRight,
   Menu,
